@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Square {
-    private UUID id;
     private Position center;
     private double edgeLen;
 
@@ -20,13 +19,10 @@ public class Square {
     private final double bot;
     @JsonIgnore
     private final double right;
+    @JsonIgnore
+    private final Map<UUID, List<TimeRange>> people = new HashMap<>();
 
     public Square(Position center, double edgeLen) {
-        this(UUID.randomUUID(), center, edgeLen);
-    }
-
-    public Square(UUID id, Position center, double edgeLen) {
-        this.id = id;
         this.center = center;
         this.edgeLen = edgeLen;
         top = center.getLat() + 0.5 * edgeLen;
@@ -35,16 +31,16 @@ public class Square {
         right = center.getLon() + 0.5 * edgeLen;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
     public Position getCenter() {
         return center;
     }
 
     public double getEdgeLen() {
         return edgeLen;
+    }
+
+    public Map<UUID, List<TimeRange>> getPeople() {
+        return people;
     }
 
     public boolean isInSquare(Position position) {

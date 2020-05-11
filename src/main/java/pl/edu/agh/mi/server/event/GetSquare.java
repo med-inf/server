@@ -2,24 +2,25 @@ package pl.edu.agh.mi.server.event;
 
 import pl.edu.agh.mi.server.data.Position;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 public class GetSquare extends Event {
     private Position position;
-    private UUID prevSquareId;
+    private Position prevSquareCenter;
 
-    public GetSquare(UUID userId, Position position, LocalDateTime time, UUID prevSquareId) {
-        super(userId, time);
+    public GetSquare(UUID userId, Position position, long time, Position prevSquareCenter) {
+        super(userId, Instant.ofEpochMilli(time));
         this.position = position;
-        this.prevSquareId = prevSquareId;
+        this.prevSquareCenter = prevSquareCenter;
     }
 
     public Position getPosition() {
         return position;
     }
 
-    public UUID getPrevSquareId() {
-        return prevSquareId;
+    public Optional<Position> getPrevSquareCenter() {
+        return Optional.ofNullable(prevSquareCenter);
     }
 }

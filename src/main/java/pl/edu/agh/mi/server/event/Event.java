@@ -1,13 +1,13 @@
 package pl.edu.agh.mi.server.event;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public abstract class Event {
     private UUID userId;
-    private LocalDateTime time;
+    private Instant time;
 
-    protected Event(UUID userId, LocalDateTime time) {
+    protected Event(UUID userId, Instant time) {
         this.userId = userId;
         this.time = time;
     }
@@ -16,7 +16,7 @@ public abstract class Event {
         return userId;
     }
 
-    public LocalDateTime getTime() {
+    public Instant getTime() {
         return time;
     }
 }

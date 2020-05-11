@@ -1,17 +1,19 @@
 package pl.edu.agh.mi.server.event;
 
-import java.time.LocalDateTime;
+import pl.edu.agh.mi.server.data.Position;
+
+import java.time.Instant;
 import java.util.UUID;
 
 public class LeaveSquare extends Event {
-    private UUID squareId;
+    private final Position squareCenter;
 
-    public LeaveSquare(UUID userId, LocalDateTime time, UUID squareId) {
-        super(userId, time);
-        this.squareId = squareId;
+    public LeaveSquare(UUID userId, long time, Position squareCenter) {
+        super(userId, Instant.ofEpochMilli(time));
+        this.squareCenter = squareCenter;
     }
 
-    public UUID getSquareId() {
-        return squareId;
+    public Position getSquareCenter() {
+        return squareCenter;
     }
 }

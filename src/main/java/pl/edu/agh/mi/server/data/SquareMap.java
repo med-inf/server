@@ -1,8 +1,14 @@
 package pl.edu.agh.mi.server.data;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import pl.edu.agh.mi.server.event.GetSquare;
 import pl.edu.agh.mi.server.event.LeaveSquare;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 
@@ -14,12 +20,18 @@ public class SquareMap {
     private static final double LEFT = 19.790282;
     private static final double BOT = 49.968808;
     private static final double RIGHT = 20.218548;
-    private static final double EDGE_LEN = 0.0001;
+    private static final double EDGE_LEN = 0.1;
+    private static final String MAP_FILE_NAME = "med-inf-map.json";
 
-    private final List<List<Square>> squares = new ArrayList<>();
+    private final List<List<Square>> squares;
 
     public SquareMap() {
-        initMap(squares, EDGE_LEN);
+        if (new File(MAP_FILE_NAME).exists()) {
+            squares = loadSquaresFromFile();
+        } else {
+            squares = createSquares(EDGE_LEN);
+            save();
+        }
     }
 
     public Square getSquare(Position position) {
@@ -44,6 +56,37 @@ public class SquareMap {
         updateLeavingTime(event.getSquareCenter(), event.getUserId(), event.getTime());
     }
 
+    public Set<UUID> findInfectedPeople(UUID userId) {
+        Set<UUID> infectedPeople = new HashSet<>();
+        squares.stream()
+                .flatMap(List::stream)
+                .filter(square -> square.getPeople().containsKey(userId))
+                .forEach(square -> infectedPeople.addAll(findInfectedPeopleInSquare(square, userId)));
+        return infectedPeople;
+    }
+
+    private Set<UUID> findInfectedPeopleInSquare(Square square, UUID userId) {
+        Set<UUID> infectedPeople = new HashSet<>();
+        List<TimeRange> infectedTimeRanges = square.getPeople().get(userId);
+        for (Map.Entry<UUID, List<TimeRange>> entry : square.getPeople().entrySet()) {
+            if (isInfected(infectedTimeRanges, entry.getValue())) {
+                infectedPeople.add(entry.getKey());
+            }
+        }
+        return infectedPeople;
+    }
+
+    private boolean isInfected(List<TimeRange> infectedTimeRanges, List<TimeRange> suspectedTimeRanges) {
+        for (TimeRange timeRange : suspectedTimeRanges) {
+            for (TimeRange infectedTimeRange : infectedTimeRanges) {
+                if (infectedTimeRange.isOverlaping(timeRange)) {
+                    return  true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Updates square leaving time
      */
@@ -54,16 +97,43 @@ public class SquareMap {
             timeRanges.get(timeRanges.size() - 1).setEnd(time);
         }
     }
-    
-    private void initMap(List<List<Square>> grid, double edgeLen) {
+
+    private List<List<Square>> loadSquaresFromFile() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.findAndRegisterModules();
+            TypeReference<List<List<Square>>> mapType = new TypeReference<>() {
+            };
+            return mapper.readValue(new File(MAP_FILE_NAME), mapType);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private List<List<Square>> createSquares(double edgeLen) {
+        List<List<Square>> grid = new ArrayList<>();
         double xStart = LEFT + 0.5 * edgeLen;
         double yStart = TOP - 0.5 * edgeLen;
         for (double y = yStart; y > BOT; y-=edgeLen) {
             List<Square> row = new ArrayList<>();
             for (double x = xStart; x < RIGHT; x+=edgeLen) {
-                row.add(new Square(new Position(y, x), edgeLen));
+                SquareInfo info = new SquareInfo(new Position(y, x), edgeLen);
+                row.add(new Square(info));
             }
             grid.add(row);
+        }
+        return grid;
+    }
+
+    public void save() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.findAndRegisterModules();
+        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+        try (FileWriter writer = new FileWriter(MAP_FILE_NAME)) {
+            String json = ow.writeValueAsString(squares);
+            writer.write(json);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

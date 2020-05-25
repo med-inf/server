@@ -1,6 +1,7 @@
 package pl.edu.agh.mi.server.data;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,44 +9,26 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Square {
-    private Position center;
-    private double edgeLen;
+    private final SquareInfo info;
+    private final Map<UUID, List<TimeRange>> people;
 
-    @JsonIgnore
-    private final double top;
-    @JsonIgnore
-    private final double left;
-    @JsonIgnore
-    private final double bot;
-    @JsonIgnore
-    private final double right;
-    @JsonIgnore
-    private final Map<UUID, List<TimeRange>> people = new HashMap<>();
-
-    public Square(Position center, double edgeLen) {
-        this.center = center;
-        this.edgeLen = edgeLen;
-        top = center.getLat() + 0.5 * edgeLen;
-        left = center.getLon() - 0.5 * edgeLen;
-        bot = center.getLat() - 0.5 * edgeLen;
-        right = center.getLon() + 0.5 * edgeLen;
+    @JsonCreator
+    private Square(@JsonProperty("info") SquareInfo info,
+                   @JsonProperty("people") Map<UUID, List<TimeRange>> people) {
+        this.info = info;
+        this.people = people;
     }
 
-    public Position getCenter() {
-        return center;
+    public Square(SquareInfo info) {
+        this.info = info;
+        people = new HashMap<>();
     }
 
-    public double getEdgeLen() {
-        return edgeLen;
+    public SquareInfo getInfo() {
+        return info;
     }
 
     public Map<UUID, List<TimeRange>> getPeople() {
         return people;
-    }
-
-    public boolean isInSquare(Position position) {
-        double lat = position.getLat();
-        double lon = position.getLon();
-        return  top >= lat && lat >= bot && right >= lon && lon >= left;
     }
 }

@@ -1,16 +1,21 @@
 package pl.edu.agh.mi.server.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.Instant;
 
 public class TimeRange {
-    private Instant start;
+    private final Instant start;
     private Instant end;
 
     public TimeRange(Instant start) {
         this.start = start;
     }
 
-    public TimeRange(Instant start, Instant end) {
+    @JsonCreator
+    public TimeRange(@JsonProperty("start") Instant start,
+                     @JsonProperty("end") Instant end) {
         this.start = start;
         this.end = end;
     }
@@ -18,6 +23,9 @@ public class TimeRange {
     public boolean isOverlaping(TimeRange other) {
         Instant otherStart = other.getStart();
         Instant otherEnd = other.getEnd();
+        if (end == null) {
+            return otherStart.compareTo(start) >= 0;
+        }
         return otherStart.compareTo(start) >= 0 && otherStart.compareTo(end) <= 0
                 || otherEnd.compareTo(start) >= 0 && otherEnd.compareTo(end) <= 0
                 || otherStart.compareTo(start) <= 0 && otherEnd.compareTo(end) >= 0;
@@ -30,10 +38,6 @@ public class TimeRange {
 
     public Instant getEnd() {
         return end;
-    }
-
-    public void setStart(Instant start) {
-        this.start = start;
     }
 
     public void setEnd(Instant end) {

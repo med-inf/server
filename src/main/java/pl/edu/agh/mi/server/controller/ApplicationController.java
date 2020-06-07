@@ -11,18 +11,21 @@ import pl.edu.agh.mi.server.dto.ResultDTO;
 import pl.edu.agh.mi.server.event.GetSquare;
 import pl.edu.agh.mi.server.event.LeaveSquare;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.File;
 import java.util.UUID;
+
+import static pl.edu.agh.mi.server.data.SquareMap.MAP_FILE_NAME;
 
 @Controller
 public class ApplicationController {
     private SquareMap squareMap;
-    private Set<UUID> infectedPeople;
 
     private ApplicationController() {
-        this.squareMap = new SquareMap();
-        this.infectedPeople = new HashSet<>();
+        if (new File(MAP_FILE_NAME).exists()) {
+            squareMap = SquareMap.loadSquaresFromFile();
+        } else {
+            squareMap = new SquareMap();
+        }
     }
 
     @PostMapping("/getSquare")
@@ -43,10 +46,11 @@ public class ApplicationController {
         System.out.println("adminDTO: " + infectedDTO.getUserId());
         String userId = infectedDTO.getUserId();
         UUID infectedUserUUUID = UUID.fromString(userId);
-        infectedPeople.add(infectedUserUUUID);
-        infectedPeople.addAll(squareMap.findInfectedPeople(infectedUserUUUID));
+        squareMap.addInfected(infectedUserUUUID);
+        squareMap.addAllInfected(squareMap.findInfectedPeople(infectedUserUUUID));
         String message = String.format("User: %s set as infected", userId);
         model.addAttribute("result", new ResultDTO(message));
+        squareMap.save();
         return "result";
     }
 
@@ -54,18 +58,19 @@ public class ApplicationController {
     public String setNotInfected(@ModelAttribute NotInfectedDTO notInfectedDTO, Model model) {
         String message;
         String userId = notInfectedDTO.getUserId();
-        if (infectedPeople.remove(UUID.fromString(userId))) {
+        if (squareMap.removeInfected(UUID.fromString(userId))) {
             message = String.format("User: %s set as non infected", userId);
         } else {
             message = String.format("No user with id: %s", userId);
         }
         model.addAttribute("result", new ResultDTO(message));
+        squareMap.save();
         return "result";
     }
 
     @GetMapping("/infected")
     public boolean isInfected(@RequestParam(value = "userId") UUID userId) {
-        return infectedPeople.contains(userId);
+        return squareMap.isInfected(userId);
     }
 
     @GetMapping("/admin")

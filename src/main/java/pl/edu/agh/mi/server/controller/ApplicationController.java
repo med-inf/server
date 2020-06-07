@@ -1,5 +1,7 @@
 package pl.edu.agh.mi.server.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,7 @@ import static pl.edu.agh.mi.server.data.SquareMap.MAP_FILE_NAME;
 
 @Controller
 public class ApplicationController {
+    Logger logger = LoggerFactory.getLogger(ApplicationController.class);
     private SquareMap squareMap;
 
     private ApplicationController() {
@@ -29,22 +32,26 @@ public class ApplicationController {
     }
 
     @PostMapping("/getSquare")
+    @ResponseBody
     public SquareInfo getSquare(@RequestBody GetSquare event) {
+        logger.info("GetSquare: " + event.getUserId() + " " + event.getPosition());
         squareMap.update(event);
         squareMap.save();
         return squareMap.getSquare(event.getPosition()).getInfo();
     }
 
     @PutMapping("/leaveSquare")
+    @ResponseBody
     public void leaveSquare(@RequestBody LeaveSquare event) {
+        logger.info("LeaveSquare: " + event.getUserId() + " " + event.getSquareCenter());
         squareMap.update(event);
         squareMap.save();
     }
 
     @PostMapping("/infected")
     public String setInfected(@ModelAttribute InfectedDTO infectedDTO, Model model) {
-        System.out.println("adminDTO: " + infectedDTO.getUserId());
         String userId = infectedDTO.getUserId();
+        logger.info("Set infected: " + userId);
         UUID infectedUserUUUID = UUID.fromString(userId);
         squareMap.addInfected(infectedUserUUUID);
         squareMap.addAllInfected(squareMap.findInfectedPeople(infectedUserUUUID));
@@ -58,6 +65,7 @@ public class ApplicationController {
     public String setNotInfected(@ModelAttribute NotInfectedDTO notInfectedDTO, Model model) {
         String message;
         String userId = notInfectedDTO.getUserId();
+        logger.info("Set not infected " + userId);
         if (squareMap.removeInfected(UUID.fromString(userId))) {
             message = String.format("User: %s set as non infected", userId);
         } else {
@@ -69,12 +77,15 @@ public class ApplicationController {
     }
 
     @GetMapping("/infected")
+    @ResponseBody
     public boolean isInfected(@RequestParam(value = "userId") UUID userId) {
+        logger.info("Is infected " + userId.toString());
         return squareMap.isInfected(userId);
     }
 
     @GetMapping("/admin")
     public String admin(Model model) {
+        logger.info("GET Admin");
         model.addAttribute("infectedDTO", new InfectedDTO());
         model.addAttribute("notInfectedDTO", new NotInfectedDTO());
         return "index";

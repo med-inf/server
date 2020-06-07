@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import pl.edu.agh.mi.server.event.GetSquare;
 import pl.edu.agh.mi.server.event.LeaveSquare;
 
@@ -117,6 +118,7 @@ public class SquareMap {
     public static SquareMap loadSquaresFromFile() {
         try {
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
             return mapper.readValue(new File(MAP_FILE_NAME), SquareMap.class);
         } catch (Exception ex) {
             throw new RuntimeException(ex);

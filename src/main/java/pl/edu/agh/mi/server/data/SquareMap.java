@@ -1,5 +1,6 @@
 package pl.edu.agh.mi.server.data;
 
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -20,22 +21,33 @@ public class SquareMap {
 //    private static final double LEFT = 19.790282;
 //    private static final double BOT = 49.968808;
 //    private static final double RIGHT = 20.218548;
+    @JsonIgnore
     private static final double TOP = 50.747055;
+    @JsonIgnore
     private static final double LEFT = 21.605444;
+    @JsonIgnore
     private static final double BOT = 50.715632;
+    @JsonIgnore
     private static final double RIGHT = 21.732614;
+    @JsonIgnore
     private static final double EDGE_LEN = 0.001;
-    private static final String MAP_FILE_NAME = "med-inf-map.json";
+    @JsonIgnore
+    public static final String MAP_FILE_NAME = "med-inf-map.json";
 
     private final List<List<Square>> squares;
+    private Set<UUID> infectedPeople;
+
+    @JsonCreator
+    private SquareMap(@JsonProperty("squares") List<List<Square>> squares,
+                      @JsonProperty("infectedPeople") Set<UUID> infectedPeople) {
+        this.squares = squares;
+        this.infectedPeople = infectedPeople;
+    }
 
     public SquareMap() {
-        if (new File(MAP_FILE_NAME).exists()) {
-            squares = loadSquaresFromFile();
-        } else {
-            squares = createSquares(EDGE_LEN);
-            save();
-        }
+        squares = createSquares(EDGE_LEN);
+        infectedPeople = new HashSet<>();
+        save();
     }
 
     public Square getSquare(Position position) {
@@ -102,13 +114,10 @@ public class SquareMap {
         }
     }
 
-    private List<List<Square>> loadSquaresFromFile() {
+    public static SquareMap loadSquaresFromFile() {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            mapper.findAndRegisterModules();
-            TypeReference<List<List<Square>>> mapType = new TypeReference<>() {
-            };
-            return mapper.readValue(new File(MAP_FILE_NAME), mapType);
+            return mapper.readValue(new File(MAP_FILE_NAME), SquareMap.class);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -131,13 +140,30 @@ public class SquareMap {
 
     public void save() {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         mapper.findAndRegisterModules();
         ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
         try (FileWriter writer = new FileWriter(MAP_FILE_NAME)) {
-            String json = ow.writeValueAsString(squares);
+            String json = ow.writeValueAsString(this);
             writer.write(json);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void addInfected(UUID userId) {
+        infectedPeople.add(userId);
+    }
+
+    public void addAllInfected(Set<UUID> userIds) {
+        infectedPeople.addAll(userIds);
+    }
+
+    public boolean removeInfected(UUID userId) {
+        return infectedPeople.remove(userId);
+    }
+
+    public boolean isInfected(UUID userId) {
+        return infectedPeople.contains(userId);
     }
 }

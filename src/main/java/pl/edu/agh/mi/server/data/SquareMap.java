@@ -16,11 +16,15 @@ import static java.lang.Math.floor;
 
 
 public class SquareMap {
-    private static final double TOP = 50.127254;
-    private static final double LEFT = 19.790282;
-    private static final double BOT = 49.968808;
-    private static final double RIGHT = 20.218548;
-    private static final double EDGE_LEN = 0.1;
+//    private static final double TOP = 50.127254;
+//    private static final double LEFT = 19.790282;
+//    private static final double BOT = 49.968808;
+//    private static final double RIGHT = 20.218548;
+    private static final double TOP = 50.747055;
+    private static final double LEFT = 21.605444;
+    private static final double BOT = 50.715632;
+    private static final double RIGHT = 21.732614;
+    private static final double EDGE_LEN = 0.001;
     private static final String MAP_FILE_NAME = "med-inf-map.json";
 
     private final List<List<Square>> squares;

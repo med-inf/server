@@ -1,0 +1,30 @@
+<!doctype html>
+
+<html lang="en" xmlns:th="http://www.thymeleaf.org/" >
+
+<head>
+  <meta charset="utf-8">
+
+  <title>Med App Admin Console</title>
+
+  <link href="../static/css/styles.css" th:href="@{/css/styles.css}" rel="stylesheet" />
+</head>
+
+<body>
+  <div class="inputs_wrap">
+    <div class="inputs_box">
+      <form class="infected" action="#" th:action="@{/infected}" th:object="${infectedDTO}" method="post">
+        <label for="infectedUserId">Add infected user ID:</label><br>
+        <input type="text" id="infectedUserId" name="infectedUserId" th:field="*{userId}"><br>
+        <input type="submit" class="submit" value="Submit" />
+      </form>
+      <form class="infected" action="#" th:action="@{/notInfected}" th:object="${notInfectedDTO}" method="post">
+        <label for="notInfectedUserId">Remove infected user ID:</label><br>
+        <input type="text" id="notInfectedUserId" name="notInfectedUserId" th:field="*{userId}"><br>
+        <input type="submit" class="submit" value="Submit" />
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>
